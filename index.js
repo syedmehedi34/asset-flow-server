@@ -78,6 +78,13 @@ async function run() {
     //   res.send(result);
     // });
 
+    app.get("/users", async (req, res) => {
+      const { hr_email } = req.query;
+      const result = await userCollection.find({ hr_email }).toArray();
+
+      res.send(result);
+    });
+
     //  get unaffiliated user data, using hr_email query
     app.get("/users/:email", async (req, res) => {
       const hr_email = req.params.email;
@@ -105,6 +112,21 @@ async function run() {
         return res.send({ message: "user already exists", insertedId: null });
       }
       const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // update a user data [hr_email]
+    app.patch("/users", async (req, res) => {
+      const { _id, hr_email } = req.body;
+      const query = { _id: new ObjectId(_id) };
+
+      const updatedDoc = {
+        $set: {
+          hr_email: hr_email,
+        },
+      };
+      const result = await userCollection.updateOne(query, updatedDoc);
+
       res.send(result);
     });
 
