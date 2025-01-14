@@ -78,6 +78,16 @@ async function run() {
     //   res.send(result);
     // });
 
+    //  get unaffiliated user data, using hr_email query
+    app.get("/users/:email", async (req, res) => {
+      const hr_email = req.params.email;
+
+      const query = { hr_email };
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
+    //
+
     // get the role data of a user
     app.get("/users/role/:email", async (req, res) => {
       const email = req.params.email;
@@ -85,12 +95,10 @@ async function run() {
       const result = await userCollection.findOne(query);
       res.send(result);
     });
-    // get the role data of a user ends
 
+    // post a user data to database
     app.post("/users", async (req, res) => {
       const user = req.body;
-      // insert email if user doesn't exists:
-      // you can do this many ways (1. email unique, 2. upsert 3. simple checking)
       const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
       if (existingUser) {
@@ -126,8 +134,8 @@ async function run() {
 
     // # assets related api
     // get all the assets according to hr email
-    app.post("/assets", verifyToken, async (req, res) => {
-      const { hr_email } = req.body;
+    app.get("/assets", verifyToken, async (req, res) => {
+      const { hr_email } = req.query;
       const result = await assetCollection.find({ hr_email }).toArray();
 
       res.send(result);
@@ -137,6 +145,15 @@ async function run() {
     app.post("/assets", async (req, res) => {
       const assetData = req.body;
       const result = await assetCollection.insertOne(assetData);
+      res.send(result);
+    });
+
+    // delete a asset
+    app.delete("/assets", async (req, res) => {
+      const { productId } = req.body;
+
+      const query = { _id: new ObjectId(productId) };
+      const result = await assetCollection.deleteOne(query);
       res.send(result);
     });
 
