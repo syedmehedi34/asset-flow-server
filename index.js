@@ -31,7 +31,8 @@ async function run() {
     // await client.connect();
 
     const userCollection = client.db("AssetFlow").collection("employees");
-    const paymentCollection = client.db("AssetFlow").collection("payments");
+    const assetCollection = client.db("AssetFlow").collection("Assets");
+    // const paymentCollection = client.db("AssetFlow").collection("payments");
 
     // jwt related api
     app.post("/jwt", async (req, res) => {
@@ -123,6 +124,22 @@ async function run() {
     //
     //
 
+    // # assets related api
+    // get all the assets according to hr email
+    app.post("/assets", verifyToken, async (req, res) => {
+      const { hr_email } = req.body;
+      const result = await assetCollection.find({ hr_email }).toArray();
+
+      res.send(result);
+    });
+
+    // post a new asset in the database
+    app.post("/assets", async (req, res) => {
+      const assetData = req.body;
+      const result = await assetCollection.insertOne(assetData);
+      res.send(result);
+    });
+
     //--------------
     //
     //
@@ -135,6 +152,15 @@ async function run() {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
+
+  // # Assets api
+  app.post("/assets", async (req, res) => {
+    const { newData } = req.body;
+    const result = await assetCollection.insertOne(newData);
+    res.send(result);
+  });
+  //
+  //
 }
 run().catch(console.dir);
 
