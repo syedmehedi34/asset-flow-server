@@ -30,7 +30,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const userCollection = client.db("AssetFlow").collection("employees");
+    const userCollection = client.db("AssetFlow").collection("Employees");
     const assetCollection = client.db("AssetFlow").collection("Assets");
     // const paymentCollection = client.db("AssetFlow").collection("payments");
 
@@ -118,14 +118,15 @@ async function run() {
     // update a user data [hr_email]
     app.patch("/users", async (req, res) => {
       const { _id, hr_email } = req.body;
-      const query = { _id: new ObjectId(_id) };
+      // const filter = { _id: new ObjectId(_id) };
+      const filter = { _id };
 
       const updatedDoc = {
         $set: {
           hr_email: hr_email,
         },
       };
-      const result = await userCollection.updateOne(query, updatedDoc);
+      const result = await userCollection.updateOne(filter, updatedDoc);
 
       res.send(result);
     });
