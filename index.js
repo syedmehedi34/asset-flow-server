@@ -157,12 +157,38 @@ async function run() {
 
     // # assets related api
     // get all the assets according to hr email
-    app.get("/assets", verifyToken, async (req, res) => {
-      const { hr_email } = req.query;
-      const result = await assetCollection.find({ hr_email }).toArray();
+    app.get("/assets", async (req, res) => {
+      const { hr_email, searchText, category } = req.query;
 
-      res.send(result);
+      // Build the query object to filter based on available parameters
+      const query = { hr_email };
+
+      // Filter by searchText if available
+      if (searchText) {
+        query.productName = { $regex: searchText, $options: "i" }; // Case-insensitive search
+      }
+
+      // Filter by category if available
+      if (category) {
+        if (["Returnable", "Non-returnable"].includes(category)) {
+          query.assetType = category;
+        } else if (["In Stock", "Out of Stock"].includes(category)) {
+          query.productQuantity =
+            category === "In Stock" ? { $gt: 0 } : { $lte: 0 }; // In Stock: quantity > 0, Out of Stock: quantity <= 0
+        }
+      }
+
+      try {
+        // Fetch assets based on the query parameters
+        const result = await assetCollection.find(query).toArray();
+
+        // Send the result
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch assets" });
+      }
     });
+    //--------------------------
 
     // post a new asset in the database
     app.post("/assets", async (req, res) => {
