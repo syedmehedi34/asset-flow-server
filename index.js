@@ -206,14 +206,14 @@ async function run() {
       res.send(result);
     });
 
-    // update a assets according to isPending
+    // update a assets according to assetUser [insertion from the employee site asset request]
     app.patch("/assets", async (req, res) => {
-      const { _id, isPendingData } = req.body;
+      const { _id, assetUserData } = req.body;
 
       const query = { _id: new ObjectId(_id) };
       const update = {
-        // $addToSet: { isPending: isPendingData },
-        $addToSet: { isPending: { $each: isPendingData } }, // Add multiple, ensuring no duplicates
+        // $addToSet: { assetUser: assetUserData },
+        $addToSet: { assetUser: { $each: assetUserData } }, // Add multiple, ensuring no duplicates
       };
 
       const result = await assetCollection.updateOne(query, update);
@@ -221,6 +221,24 @@ async function run() {
       // Fetch the updated document if needed for future
       // const updatedEntry = await assetCollection.findOne(query);
       res.status(200).send(result);
+    });
+
+    // update assets according to assetUser [insertion from the HR site asset approve or reject]
+    app.patch("/assets", async (req, res) => {
+      const { _id, assetUserData } = req.body;
+
+      const query = { _id: new ObjectId(_id) };
+
+      // const update = {
+      //   // $addToSet: { assetUser: assetUserData },
+      //   $addToSet: { assetUser: { $each: assetUserData } }, // Add multiple, ensuring no duplicates
+      // };
+
+      // const result = await assetCollection.updateOne(query, update);
+
+      // Fetch the updated document if needed for future
+      // const updatedEntry = await assetCollection.findOne(query);
+      // res.status(200).send(result);
     });
     //
     //
