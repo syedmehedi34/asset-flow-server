@@ -10,7 +10,12 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5002;
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://enmmedia-19300.web.app"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -40,9 +45,17 @@ async function run() {
     // jwt related api
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "1h",
-      });
+      // const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+      //   expiresIn: "1h",
+      // });
+      const token = jwt.sign(
+        { email: user.email },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
+
       res.send({ token });
     });
 
@@ -64,6 +77,11 @@ async function run() {
 
     // use verify admin after verifyToken
     const verifyAdmin = async (req, res, next) => {
+      if (!req.decoded) {
+        return res
+          .status(401)
+          .send({ message: "Unauthorized: Token not provided or invalid" });
+      }
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -75,7 +93,7 @@ async function run() {
     };
 
     // # users related api started
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyAdmin, async (req, res) => {
       const { hr_email } = req.query;
       const result = await userCollection.find({ hr_email }).toArray();
 
@@ -136,7 +154,7 @@ async function run() {
 
     // # assets related api
     // get all the assets according to hr email and search by text and category
-    app.get("/assets", async (req, res) => {
+    app.get("/assets", verifyToken, async (req, res) => {
       const { hr_email, searchText, category } = req.query;
 
       // Build the query object to filter based on available parameters
@@ -188,10 +206,20 @@ async function run() {
 
     // get asset distribution data according hr_mail, text search and category search
     app.get("/asset_distribution", async (req, res) => {
-      const { hr_email, searchText, category } = req.query;
+      const { hr_email, requestStatus, employeeEmail, searchText, category } =
+        req.query;
 
       // Build the query object to filter based on available parameters
-      const query = { hr_email };
+      const query = {};
+
+      // Filter by hr_email if available
+      if (hr_email) {
+        query.hr_email = hr_email;
+      }
+
+      if (employeeEmail) {
+        query.employeeEmail = employeeEmail;
+      }
 
       // Filter by searchText if available
       if (searchText) {
@@ -206,6 +234,11 @@ async function run() {
           query.assetQuantity =
             category === "In Stock" ? { $gt: 0 } : { $lte: 0 }; // In Stock: quantity > 0, Out of Stock: quantity <= 0
         }
+      }
+
+      // Filter by requestStatus if available
+      if (requestStatus) {
+        query.requestStatus = requestStatus;
       }
 
       try {
@@ -224,6 +257,25 @@ async function run() {
     app.post("/asset_distribution", async (req, res) => {
       const assetData = req.body;
       const result = await assetDistributionCollection.insertOne(assetData);
+      res.send(result);
+    });
+
+    // patch the
+    app.patch("/asset_distribution", async (req, res) => {
+      const { _id, requestStatus } = req.body;
+      const filter = { _id: new ObjectId(_id) };
+      // const filter = { _id };
+
+      const updatedDoc = {
+        $set: {
+          requestStatus: requestStatus,
+        },
+      };
+      const result = await assetDistributionCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+
       res.send(result);
     });
 
