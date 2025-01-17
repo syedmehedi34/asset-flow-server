@@ -186,12 +186,47 @@ async function run() {
 
     // # asset DistributionCollection collection
 
+    // get asset distribution data according hr_mail, text search and category search
+    app.get("/asset_distribution", async (req, res) => {
+      const { hr_email, searchText, category } = req.query;
+
+      // Build the query object to filter based on available parameters
+      const query = { hr_email };
+
+      // Filter by searchText if available
+      if (searchText) {
+        query.assetName = { $regex: searchText, $options: "i" }; // Case-insensitive search
+      }
+
+      // Filter by category if available
+      if (category) {
+        if (["Returnable", "Non-returnable"].includes(category)) {
+          query.assetType = category;
+        } else if (["In Stock", "Out of Stock"].includes(category)) {
+          query.assetQuantity =
+            category === "In Stock" ? { $gt: 0 } : { $lte: 0 }; // In Stock: quantity > 0, Out of Stock: quantity <= 0
+        }
+      }
+
+      try {
+        // Fetch assets based on the query parameters
+        const result = await assetDistributionCollection.find(query).toArray();
+
+        // Send the result
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch assets" });
+      }
+    });
+
     // post a new asset request from the employee route
+    // todo : have to add a option for backend checking that,,,one employee can not add a single asset for multiple time at the asset request.
     app.post("/asset_distribution", async (req, res) => {
       const assetData = req.body;
       const result = await assetDistributionCollection.insertOne(assetData);
       res.send(result);
     });
+
     //
     //
     // app.post("/assets", async (req, res) => {
