@@ -32,6 +32,9 @@ async function run() {
 
     const userCollection = client.db("AssetFlow").collection("Employees");
     const assetCollection = client.db("AssetFlow").collection("Assets");
+    const assetDistributionCollection = client
+      .db("AssetFlow")
+      .collection("AssetsDistribution");
     // const paymentCollection = client.db("AssetFlow").collection("payments");
 
     // jwt related api
@@ -72,12 +75,6 @@ async function run() {
     };
 
     // # users related api started
-    // get all users and their role information
-    // app.get("/users", async (req, res) => {
-    //   const result = await userCollection.find().toArray();
-    //   res.send(result);
-    // });
-
     app.get("/users", async (req, res) => {
       const { hr_email } = req.query;
       const result = await userCollection.find({ hr_email }).toArray();
@@ -131,24 +128,6 @@ async function run() {
       res.send(result);
     });
 
-    // app.patch("/users/admin/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: new ObjectId(id) };
-    //   const updatedDoc = {
-    //     $set: {
-    //       role: "admin",
-    //     },
-    //   };
-    //   const result = await userCollection.updateOne(filter, updatedDoc);
-    //   res.send(result);
-    // });
-
-    // app.delete("/users/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const query = { _id: new ObjectId(id) };
-    //   const result = await userCollection.deleteOne(query);
-    //   res.send(result);
-    // });
     // # users related api ends
 
     //
@@ -156,7 +135,7 @@ async function run() {
     //
 
     // # assets related api
-    // get all the assets according to hr email
+    // get all the assets according to hr email and search by text and category
     app.get("/assets", async (req, res) => {
       const { hr_email, searchText, category } = req.query;
 
@@ -165,7 +144,7 @@ async function run() {
 
       // Filter by searchText if available
       if (searchText) {
-        query.productName = { $regex: searchText, $options: "i" }; // Case-insensitive search
+        query.assetName = { $regex: searchText, $options: "i" }; // Case-insensitive search
       }
 
       // Filter by category if available
@@ -173,7 +152,7 @@ async function run() {
         if (["Returnable", "Non-returnable"].includes(category)) {
           query.assetType = category;
         } else if (["In Stock", "Out of Stock"].includes(category)) {
-          query.productQuantity =
+          query.assetQuantity =
             category === "In Stock" ? { $gt: 0 } : { $lte: 0 }; // In Stock: quantity > 0, Out of Stock: quantity <= 0
         }
       }
@@ -190,55 +169,28 @@ async function run() {
     });
     //--------------------------
 
-    // post a new asset in the database
+    // post a new asset in the database [hr manager only can do this]
     app.post("/assets", async (req, res) => {
       const assetData = req.body;
       const result = await assetCollection.insertOne(assetData);
       res.send(result);
     });
 
-    // delete a asset
+    // delete a asset [hr manager only can do this]
     app.delete("/assets", async (req, res) => {
       const { productId } = req.body;
-
       const query = { _id: new ObjectId(productId) };
       const result = await assetCollection.deleteOne(query);
       res.send(result);
     });
 
-    // update a assets according to assetUser [insertion from the employee site asset request]
-    app.patch("/assets", async (req, res) => {
-      const { _id, assetUserData } = req.body;
+    // # asset DistributionCollection collection
 
-      const query = { _id: new ObjectId(_id) };
-      const update = {
-        // $addToSet: { assetUser: assetUserData },
-        $addToSet: { assetUser: { $each: assetUserData } }, // Add multiple, ensuring no duplicates
-      };
-
-      const result = await assetCollection.updateOne(query, update);
-
-      // Fetch the updated document if needed for future
-      // const updatedEntry = await assetCollection.findOne(query);
-      res.status(200).send(result);
-    });
-
-    // update assets according to assetUser [insertion from the HR site asset approve or reject]
-    app.patch("/assets", async (req, res) => {
-      const { _id, assetUserData } = req.body;
-
-      const query = { _id: new ObjectId(_id) };
-
-      // const update = {
-      //   // $addToSet: { assetUser: assetUserData },
-      //   $addToSet: { assetUser: { $each: assetUserData } }, // Add multiple, ensuring no duplicates
-      // };
-
-      // const result = await assetCollection.updateOne(query, update);
-
-      // Fetch the updated document if needed for future
-      // const updatedEntry = await assetCollection.findOne(query);
-      // res.status(200).send(result);
+    // post a new asset request from the employee route
+    app.post("/asset_distribution", async (req, res) => {
+      const assetData = req.body;
+      const result = await assetDistributionCollection.insertOne(assetData);
+      res.send(result);
     });
     //
     //
