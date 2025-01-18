@@ -6,6 +6,7 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+// const { ObjectId } = require("mongoose").Types; // Import ObjectId from mongoose
 
 const port = process.env.PORT || 5002;
 
@@ -152,17 +153,79 @@ async function run() {
 
     // update a user data [hr_email]
     app.patch("/users", async (req, res) => {
-      const { _id, hr_email } = req.body;
-      // const filter = { _id: new ObjectId(_id) };
-      const filter = { _id };
+      const { _id, hr_email, name, photo } = req.body;
+      // console.log(name, photo);
+      const filter = { _id: new ObjectId(_id) };
+      // const filter = { _id };
 
-      const updatedDoc = {
-        $set: {
-          hr_email: hr_email,
-        },
-      };
+      let updatedDoc = {};
+
+      if (hr_email && !name && !photo) {
+        updatedDoc = {
+          $set: {
+            hr_email: hr_email,
+          },
+        };
+      }
+
+      if (name && photo) {
+        updatedDoc = {
+          $set: {
+            name: name,
+            photo: photo,
+          },
+        };
+      }
+
       const result = await userCollection.updateOne(filter, updatedDoc);
 
+      res.send(result);
+    });
+
+    // update multiple user data [hr_email]
+    // app.patch("/user", async (req, res) => {
+    //   const { ids, data } = req.body;
+    //   console.log("Request Body:", req.body);
+
+    //   console.log("Received data:", data);
+    //   console.log("Received ids:", ids);
+
+    //   if (!Array.isArray(ids) || ids.length === 0) {
+    //     return res
+    //       .status(400)
+    //       .json({ success: false, message: "IDs must be a non-empty array." });
+    //   }
+
+    //   // Convert string IDs to MongoDB ObjectIds
+    //   const objectIds = ids.map((id) => new ObjectId(id));
+    //   // const objectIds = ids.map((id) => id);
+
+    //   const result = await userCollection.updateMany(
+    //     { _id: { $in: objectIds } }, // Match documents with _id in the provided array
+    //     { $set: data } // Update with the provided data
+    //   );
+    //   res.send(result);
+    // });
+    app.patch("/user", async (req, res) => {
+      const { ids, data } = req.body;
+      // console.log("Received data:", data);
+      // console.log("Received ids:", ids);
+
+      // Validate ids array
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "IDs must be a non-empty array." });
+      }
+
+      const objectIds = ids.map((id) => new ObjectId(id));
+
+      const result = await userCollection.updateMany(
+        { _id: { $in: objectIds } },
+        { $set: data }
+      );
+
+      // Send the result of the update operation
       res.send(result);
     });
 
