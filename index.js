@@ -222,6 +222,21 @@ async function run() {
       res.send(result);
     });
 
+    // patch the asset collection to return a asset, update the counting [My assets page]
+    app.patch("/assets", async (req, res) => {
+      const { assetID } = req.body;
+      const filter = { _id: new ObjectId(assetID) };
+
+      const updatedDoc = {
+        $inc: {
+          assetQuantity: 1,
+        },
+      };
+      const result = await assetCollection.updateOne(filter, updatedDoc);
+
+      res.send(result);
+    });
+
     // # asset DistributionCollection collection
 
     // get asset distribution data according hr_mail, text search and category search
@@ -280,7 +295,7 @@ async function run() {
       res.send(result);
     });
 
-    // patch the
+    // patch the [My assets page]
     app.patch("/asset_distribution", async (req, res) => {
       const { _id, requestStatus } = req.body;
       const filter = { _id: new ObjectId(_id) };
@@ -289,6 +304,9 @@ async function run() {
       const updatedDoc = {
         $set: {
           requestStatus: requestStatus,
+        },
+        $inc: {
+          assetQuantity: 1,
         },
       };
       const result = await assetDistributionCollection.updateOne(
@@ -301,11 +319,6 @@ async function run() {
 
     //
     //
-    // app.post("/assets", async (req, res) => {
-    //   const { newData } = req.body;
-    //   const result = await assetCollection.insertOne(newData);
-    //   res.send(result);
-    // });
     //--------------
     //
     //
