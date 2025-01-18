@@ -45,23 +45,15 @@ async function run() {
     // jwt related api
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      // const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-      //   expiresIn: "1h",
-      // });
-      const token = jwt.sign(
-        { email: user.email },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-          expiresIn: "1h",
-        }
-      );
-
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
       res.send({ token });
     });
 
     // middlewares
     const verifyToken = (req, res, next) => {
-      // console.log('inside verify token', req.headers.authorization);
+      // console.log("inside verify token", req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "unauthorized access" });
       }
@@ -77,15 +69,17 @@ async function run() {
 
     // use verify admin after verifyToken
     const verifyAdmin = async (req, res, next) => {
+      // console.log(req.decoded.email);
       if (!req.decoded) {
         return res
           .status(401)
           .send({ message: "Unauthorized: Token not provided or invalid" });
       }
+
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      const isAdmin = user?.role === "admin";
+      const isAdmin = user?.role === "hr_manager";
       if (!isAdmin) {
         return res.status(403).send({ message: "forbidden access" });
       }
@@ -93,7 +87,33 @@ async function run() {
     };
 
     // # users related api started
-    app.get("/users", verifyAdmin, async (req, res) => {
+    // * checking the user role
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email);
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      const query = { email: email };
+
+      const user = await userCollection.findOne(query);
+
+      let role = "";
+
+      if (user?.role === "hr_manager") {
+        role = "hr_manager";
+      }
+      if (user?.role === "employee") {
+        role = "employee";
+      }
+
+      res.send({ role });
+    });
+    //
+
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+      // console.log(req.headers);  // get the token from localstorage [using secureAxios]
       const { hr_email } = req.query;
       const result = await userCollection.find({ hr_email }).toArray();
 
