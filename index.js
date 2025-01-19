@@ -323,6 +323,7 @@ async function run() {
     // update assets - assets data are updating from the asset list [hr only]
     app.patch("/assets_update", async (req, res) => {
       const { _id, updatedData } = req.body;
+      // console.log(updatedData);
       const filter = { _id: new ObjectId(_id) };
 
       const updatedDoc = {
