@@ -113,10 +113,13 @@ async function run() {
     });
     //
 
-    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
       // console.log(req.headers);  // get the token from localstorage [using secureAxios]
       const { hr_email } = req.query;
-      const result = await userCollection.find({ hr_email }).toArray();
+
+      query = { hr_email };
+
+      const result = await userCollection.find(query).toArray();
 
       res.send(result);
     });
@@ -173,6 +176,23 @@ async function run() {
           $set: {
             name: name,
             photo: photo,
+          },
+        };
+      }
+      if (!name && photo) {
+        updatedDoc = {
+          $set: {
+            // name: name,
+            photo: photo,
+          },
+        };
+      }
+
+      if (name && !photo) {
+        updatedDoc = {
+          $set: {
+            name: name,
+            // photo: photo,
           },
         };
       }
