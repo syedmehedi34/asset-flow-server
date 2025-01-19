@@ -320,6 +320,21 @@ async function run() {
       res.send(result);
     });
 
+    // update assets - assets data are updating from the asset list [hr only]
+    app.patch("/assets_update", async (req, res) => {
+      const { _id, updatedData } = req.body;
+      const filter = { _id: new ObjectId(_id) };
+
+      const updatedDoc = {
+        $set: {
+          ...updatedData,
+        },
+      };
+      const result = await assetCollection.updateOne(filter, updatedDoc);
+
+      res.send(result);
+    });
+
     // # asset DistributionCollection collection
 
     // get asset distribution data according hr_mail, text search and category search
