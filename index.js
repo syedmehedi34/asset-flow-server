@@ -38,6 +38,7 @@ async function run() {
 
     const userCollection = client.db("AssetFlow").collection("Employees");
     const assetCollection = client.db("AssetFlow").collection("Assets");
+    const paymentCollection = client.db("AssetFlow").collection("Payments");
     const assetDistributionCollection = client
       .db("AssetFlow")
       .collection("AssetsDistribution");
@@ -86,6 +87,40 @@ async function run() {
       }
       next();
     };
+    // # payment related api started
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      // console.log(amount, "amount inside the intent");
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+
+      //  carefully delete each item from the cart
+      // console.log("payment info", payment);
+      // const query = {
+      //   _id: {
+      //     $in: payment.cartIds.map((id) => new ObjectId(id)),
+      //   },
+      // };
+
+      // const deleteResult = await cartCollection.deleteMany(query);
+
+      // res.send({ paymentResult, deleteResult });
+      res.send(paymentResult);
+    });
 
     // # users related api started
     // * checking the user role
@@ -396,13 +431,14 @@ async function run() {
 
     // patch the [My assets page]
     app.patch("/asset_distribution", async (req, res) => {
-      const { _id, requestStatus } = req.body;
+      const { _id, requestStatus, approvalDate } = req.body;
       const filter = { _id: new ObjectId(_id) };
       // const filter = { _id };
 
       const updatedDoc = {
         $set: {
           requestStatus: requestStatus,
+          approvalDate: approvalDate,
         },
         $inc: {
           assetQuantity: 1,
