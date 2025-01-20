@@ -13,7 +13,7 @@ const port = process.env.PORT || 5002;
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://enmmedia-19300.web.app"],
+    origin: ["http://localhost:5173", "https://asset-flow.netlify.app"],
     credentials: true,
   })
 );
