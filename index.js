@@ -239,30 +239,6 @@ async function run() {
       res.send(result);
     });
 
-    // update multiple user data [hr_email]
-    // app.patch("/user", async (req, res) => {
-    //   const { ids, data } = req.body;
-    //   console.log("Request Body:", req.body);
-
-    //   console.log("Received data:", data);
-    //   console.log("Received ids:", ids);
-
-    //   if (!Array.isArray(ids) || ids.length === 0) {
-    //     return res
-    //       .status(400)
-    //       .json({ success: false, message: "IDs must be a non-empty array." });
-    //   }
-
-    //   // Convert string IDs to MongoDB ObjectIds
-    //   const objectIds = ids.map((id) => new ObjectId(id));
-    //   // const objectIds = ids.map((id) => id);
-
-    //   const result = await userCollection.updateMany(
-    //     { _id: { $in: objectIds } }, // Match documents with _id in the provided array
-    //     { $set: data } // Update with the provided data
-    //   );
-    //   res.send(result);
-    // });
     app.patch("/user", async (req, res) => {
       const { ids, data } = req.body;
       // console.log("Received data:", data);
