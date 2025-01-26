@@ -112,7 +112,7 @@ async function run() {
       const query = { email: payment.email };
       const updatedDoc = {
         $set: {
-          package: payment.package,
+          package: payment.packageId,
         },
       };
 
