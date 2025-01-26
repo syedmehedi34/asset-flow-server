@@ -121,7 +121,7 @@ async function run() {
     });
 
     // # users related api started
-    // * checking the user role
+    // * checking the user role [not necessary for now ]
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       // console.log(email);
@@ -141,7 +141,6 @@ async function run() {
       if (user?.role === "employee") {
         role = "employee";
       }
-
       res.send({ role });
     });
     //
@@ -149,6 +148,10 @@ async function run() {
     app.get("/users", verifyToken, async (req, res) => {
       // console.log(req.headers);  // get the token from localstorage [using secureAxios]
       const { hr_email } = req.query;
+
+      if (hr_email === "unaffiliated@hostname.com") {
+        return res.status(400).send({ message: "No data found" });
+      }
 
       query = { hr_email };
 
