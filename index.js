@@ -192,17 +192,18 @@ async function run() {
 
     // update a user data [hr_email]
     app.patch("/users", async (req, res) => {
-      const { _id, hr_email, name, photo } = req.body;
+      const { _id, hr_email, name, photo, companyLogo } = req.body;
       // console.log(name, photo);
       const filter = { _id: new ObjectId(_id) };
       // const filter = { _id };
 
       let updatedDoc = {};
 
-      if (hr_email && !name && !photo) {
+      if (hr_email && companyLogo && !name && !photo) {
         updatedDoc = {
           $set: {
             hr_email: hr_email,
+            companyLogo: companyLogo,
           },
         };
       }
@@ -441,10 +442,11 @@ async function run() {
           requestStatus: requestStatus,
           approvalDate: approvalDate,
         },
-        $inc: {
-          assetQuantity: 1,
-        },
+        // $inc: {
+        //   assetQuantity: 1,
+        // },
       };
+
       const result = await assetDistributionCollection.updateOne(
         filter,
         updatedDoc
