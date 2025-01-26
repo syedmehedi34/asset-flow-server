@@ -409,20 +409,31 @@ async function run() {
 
     // patch the [My assets page]
     app.patch("/asset_distribution", async (req, res) => {
-      const { _id, requestStatus, approvalDate } = req.body;
+      const { _id, requestStatus, approvalDate, assetID, n } = req.body;
       const filter = { _id: new ObjectId(_id) };
       // const filter = { _id };
+
+      if (assetID) {
+        // Update assetCollection's Counts
+        const filterAsset = { _id: new ObjectId(assetID) };
+        const updatedDocAsset = {
+          $inc: {
+            assetQuantity: n,
+          },
+        };
+
+        const assetResult = await assetCollection.updateOne(
+          filterAsset,
+          updatedDocAsset
+        );
+      }
 
       const updatedDoc = {
         $set: {
           requestStatus: requestStatus,
           approvalDate: approvalDate,
         },
-        // $inc: {
-        //   assetQuantity: 1,
-        // },
       };
-
       const result = await assetDistributionCollection.updateOne(
         filter,
         updatedDoc
