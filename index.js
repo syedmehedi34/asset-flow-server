@@ -161,7 +161,7 @@ async function run() {
     });
 
     //  get unaffiliated user data, using hr_email query
-    app.get("/users/:email", async (req, res) => {
+    app.get("/users/:email", verifyToken, async (req, res) => {
       const hr_email = req.params.email;
 
       const query = { hr_email };
@@ -171,7 +171,7 @@ async function run() {
     //
 
     // get the role data of a user
-    app.get("/users/role/:email", async (req, res) => {
+    app.get("/users/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await userCollection.findOne(query);
@@ -179,7 +179,7 @@ async function run() {
     });
 
     // post a user data to database
-    app.post("/users", async (req, res) => {
+    app.post("/users", verifyToken, async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
@@ -191,7 +191,7 @@ async function run() {
     });
 
     // update a user data [hr_email]
-    app.patch("/users", async (req, res) => {
+    app.patch("/users", verifyToken, async (req, res) => {
       const { _id, hr_email, name, photo, companyLogo } = req.body;
       // console.log(name, photo);
       const filter = { _id: new ObjectId(_id) };
@@ -239,7 +239,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/user", async (req, res) => {
+    app.patch("/user", verifyToken, verifyAdmin, async (req, res) => {
       const { ids, data } = req.body;
       // console.log("Received data:", data);
       // console.log("Received ids:", ids);
@@ -304,14 +304,14 @@ async function run() {
     //--------------------------
 
     // post a new asset in the database [hr manager only can do this]
-    app.post("/assets", async (req, res) => {
+    app.post("/assets", verifyToken, verifyAdmin, async (req, res) => {
       const assetData = req.body;
       const result = await assetCollection.insertOne(assetData);
       res.send(result);
     });
 
     // delete a asset [hr manager only can do this]
-    app.delete("/assets", async (req, res) => {
+    app.delete("/assets", verifyToken, verifyAdmin, async (req, res) => {
       const { productId } = req.body;
       const query = { _id: new ObjectId(productId) };
       const result = await assetCollection.deleteOne(query);
@@ -319,7 +319,7 @@ async function run() {
     });
 
     // patch the asset collection to return a asset, update the counting [My assets page]
-    app.patch("/assets", async (req, res) => {
+    app.patch("/assets", verifyToken, async (req, res) => {
       const { assetID } = req.body;
       const filter = { _id: new ObjectId(assetID) };
 
@@ -334,7 +334,7 @@ async function run() {
     });
 
     // update assets - assets data are updating from the asset list [hr only]
-    app.patch("/assets_update", async (req, res) => {
+    app.patch("/assets_update", verifyToken, verifyAdmin, async (req, res) => {
       const { _id, updatedData } = req.body;
       // console.log(updatedData);
       const filter = { _id: new ObjectId(_id) };
@@ -352,7 +352,7 @@ async function run() {
     // # asset DistributionCollection collection
 
     // get asset distribution data according hr_mail, text search and category search
-    app.get("/asset_distribution", async (req, res) => {
+    app.get("/asset_distribution", verifyToken, async (req, res) => {
       const { hr_email, requestStatus, employeeEmail, searchText, category } =
         req.query;
 
