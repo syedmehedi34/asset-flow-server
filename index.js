@@ -179,7 +179,7 @@ async function run() {
     });
 
     // post a user data to database
-    app.post("/users", verifyToken, async (req, res) => {
+    app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
