@@ -481,9 +481,10 @@ async function run() {
           status,
           receivingDate,
           returningDate,
+          cancellingDate,
         } = req.body;
 
-        // console.log(status, receivingDate, returningDate);
+        console.log(assetID);
 
         // Validate inputs for usersCollection update
         if (email && assetID && status) {
@@ -500,6 +501,8 @@ async function run() {
             userUpdateFields["assets.$[elem].receivingDate"] = receivingDate;
           if (returningDate)
             userUpdateFields["assets.$[elem].returningDate"] = returningDate;
+          if (cancellingDate)
+            userUpdateFields["assets.$[elem].cancellingDate"] = cancellingDate;
 
           // Update usersCollection
           const userFilter = { email };
