@@ -466,37 +466,124 @@ async function run() {
 
     // patch the [My assets page]
     app.patch("/asset_distribution", async (req, res) => {
-      const { _id, requestStatus, approvalDate, assetID, n } = req.body;
-      const filter = { _id: new ObjectId(_id) };
-      // const filter = { _id };
+      try {
+        const {
+          _id,
+          requestStatus,
+          approvalDate,
+          assetID,
+          n,
 
-      if (assetID) {
-        // Update assetCollection's Counts
-        const filterAsset = { _id: new ObjectId(assetID) };
-        const updatedDocAsset = {
-          $inc: {
-            assetQuantity: n,
-          },
-        };
+          email,
+          status,
+          receivingDate,
+          returningDate,
+        } = req.body;
 
-        const assetResult = await assetCollection.updateOne(
-          filterAsset,
-          updatedDocAsset
-        );
+        // console.log(status, receivingDate, returningDate);
+
+        // Validate inputs for usersCollection update
+        if (email && assetID && status) {
+          // Validate assetID format (assuming it's stored as ObjectID)
+          if (!ObjectId.isValid(assetID)) {
+            return res.status(400).send({ error: "Invalid assetID format" });
+          }
+
+          // Build update object for usersCollection
+          const userUpdateFields = {
+            "assets.$[elem].status": status,
+          };
+          if (receivingDate)
+            userUpdateFields["assets.$[elem].receivingDate"] = receivingDate;
+          if (returningDate)
+            userUpdateFields["assets.$[elem].returningDate"] = returningDate;
+
+          // Update usersCollection
+          const userFilter = { email };
+          const userUpdate = {
+            $set: userUpdateFields,
+          };
+          const userOptions = {
+            arrayFilters: [{ "elem.assetID": assetID }],
+          };
+
+          const userResult = await userCollection.updateOne(
+            userFilter,
+            userUpdate,
+            userOptions
+          );
+
+          if (userResult.matchedCount === 0) {
+            return res
+              .status(404)
+              .send({ error: "User not found or asset not assigned to user" });
+          }
+        }
+
+        // Original logic for assetDistributionCollection and assetCollection
+        if (_id) {
+          // Validate _id
+          if (!ObjectId.isValid(_id)) {
+            return res.status(400).send({ error: "Invalid _id format" });
+          }
+
+          // Update assetCollection if assetID and n are provided
+          if (assetID) {
+            const filterAsset = { _id: new ObjectId(assetID) };
+            const asset = await assetCollection.findOne(filterAsset);
+
+            if (!asset) {
+              return res.status(404).send({ error: "Asset not found" });
+            }
+
+            // Prevent negative quantity
+            if (n && asset.assetQuantity + n < 0) {
+              return res
+                .status(400)
+                .send({ error: "Cannot reduce asset quantity below 0" });
+            }
+
+            const updatedDocAsset = {
+              $inc: {
+                assetQuantity: n || 0,
+              },
+            };
+
+            await assetCollection.updateOne(filterAsset, updatedDocAsset);
+          }
+
+          // Update assetDistributionCollection
+          const filter = { _id: new ObjectId(_id) };
+          const updatedDocForAssetDistributionCollection = {
+            $set: {
+              requestStatus: requestStatus || null,
+              approvalDate: approvalDate || null,
+            },
+          };
+
+          const distributionResult =
+            await assetDistributionCollection.updateOne(
+              filter,
+              updatedDocForAssetDistributionCollection
+            );
+
+          if (distributionResult.matchedCount === 0) {
+            return res
+              .status(404)
+              .send({ error: "Asset distribution record not found" });
+          }
+        }
+
+        // Respond with success
+        res.send({
+          message: "Update successful",
+          userUpdated: email && assetID && status ? true : false,
+          distributionUpdated: _id ? true : false,
+        });
+      } catch (error) {
+        console.error("Error updating asset distribution:", error);
+        res.status(500).send({ error: "Internal server error" });
       }
-
-      const updatedDoc = {
-        $set: {
-          requestStatus: requestStatus,
-          approvalDate: approvalDate,
-        },
-      };
-      const result = await assetDistributionCollection.updateOne(
-        filter,
-        updatedDoc
-      );
-
-      res.send(result);
     });
 
     //
