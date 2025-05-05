@@ -407,6 +407,59 @@ async function run() {
     // todo : have to add a option for backend checking that,,,one employee can not add a single asset for multiple time at the asset request.
     app.post("/asset_distribution", async (req, res) => {
       const assetData = req.body;
+
+      const {
+        assetID,
+        employeeName,
+        employeeEmail,
+        hr_email,
+
+        assetRequestingDate,
+        assetRequestMessage,
+        assetName,
+        assetType,
+        assetQuantity,
+        assetDescription,
+
+        assetPostDate,
+        companyName,
+        requestStatus,
+        approvalDate,
+      } = assetData;
+
+      const asset = {
+        assetID,
+        assetRequestingDate,
+        assetRequestMessage,
+        assetName,
+        assetType,
+        assetDescription,
+        assetPostDate,
+        companyName,
+        status: "pending",
+        receivingDate: "Not Received",
+        returningDate: "Not Returned",
+      };
+
+      // 🔍 Find the employee from userCollection using both emails
+      const employee = await userCollection.findOne({
+        email: employeeEmail,
+        hr_email: hr_email,
+      });
+
+      if (!employee) {
+        return res
+          .status(404)
+          .send({ message: "Employee not found with provided emails" });
+      }
+
+      // 🛠️ Push assetData to employee's assets array
+      await userCollection.updateOne(
+        { _id: employee._id },
+        { $push: { assets: asset } }
+      );
+
+      // 📦 Insert assetData into assetDistributionCollection
       const result = await assetDistributionCollection.insertOne(assetData);
       res.send(result);
     });
