@@ -425,6 +425,8 @@ async function run() {
         companyName,
         requestStatus,
         approvalDate,
+        cancellingDate,
+        returningDate,
       } = assetData;
 
       const asset = {
@@ -439,6 +441,7 @@ async function run() {
         status: "pending",
         receivingDate: "Not Received",
         returningDate: "Not Returned",
+        cancellingDate: "Not Cancelled",
       };
 
       // 🔍 Find the employee from userCollection using both emails
