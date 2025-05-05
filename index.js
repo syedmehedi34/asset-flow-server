@@ -476,7 +476,6 @@ async function run() {
           approvalDate,
           assetID,
           n,
-
           email,
           status,
           receivingDate,
@@ -560,11 +559,14 @@ async function run() {
 
           // Update assetDistributionCollection
           const filter = { _id: new ObjectId(_id) };
+          const updateFields = {
+            requestStatus: requestStatus || null,
+          };
+          if (approvalDate) {
+            updateFields.approvalDate = approvalDate;
+          }
           const updatedDocForAssetDistributionCollection = {
-            $set: {
-              requestStatus: requestStatus || null,
-              approvalDate: approvalDate || null,
-            },
+            $set: updateFields,
           };
 
           const distributionResult =
