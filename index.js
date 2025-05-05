@@ -481,6 +481,7 @@ async function run() {
           receivingDate,
           returningDate,
           cancellingDate,
+          rejectingDate,
         } = req.body;
 
         console.log(assetID);
@@ -502,6 +503,8 @@ async function run() {
             userUpdateFields["assets.$[elem].returningDate"] = returningDate;
           if (cancellingDate)
             userUpdateFields["assets.$[elem].cancellingDate"] = cancellingDate;
+          if (rejectingDate)
+            userUpdateFields["assets.$[elem].rejectingDate"] = rejectingDate;
 
           // Update usersCollection
           const userFilter = { email };
@@ -564,6 +567,9 @@ async function run() {
           };
           if (approvalDate) {
             updateFields.approvalDate = approvalDate;
+          }
+          if (rejectingDate) {
+            updateFields.rejectingDate = rejectingDate;
           }
           const updatedDocForAssetDistributionCollection = {
             $set: updateFields,
