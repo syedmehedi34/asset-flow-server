@@ -476,6 +476,7 @@ async function run() {
           approvalDate,
           assetID,
           n,
+
           email,
           status,
           receivingDate,
