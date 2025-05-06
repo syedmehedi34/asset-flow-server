@@ -571,6 +571,13 @@ async function run() {
           if (rejectingDate) {
             updateFields.rejectingDate = rejectingDate;
           }
+          if (returningDate) {
+            updateFields.returningDate = returningDate;
+          }
+          if (cancellingDate) {
+            updateFields.cancellingDate = cancellingDate;
+          }
+
           const updatedDocForAssetDistributionCollection = {
             $set: updateFields,
           };
