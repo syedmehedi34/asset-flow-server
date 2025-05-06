@@ -149,6 +149,7 @@ async function run() {
     });
     //
 
+    // get all users data, using hr_email query
     app.get("/users", verifyToken, async (req, res) => {
       // console.log(req.headers);  // get the token from localstorage [using secureAxios]
       const { hr_email } = req.query;
@@ -170,6 +171,16 @@ async function run() {
 
       const query = { hr_email };
       const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
+    //
+
+    // get a single user data using his _id
+    app.get("/single_user/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.findOne(query);
       res.send(result);
     });
     //
@@ -476,6 +487,7 @@ async function run() {
           approvalDate,
           assetID,
           n,
+
           email,
           status,
           receivingDate,
@@ -571,6 +583,13 @@ async function run() {
           if (rejectingDate) {
             updateFields.rejectingDate = rejectingDate;
           }
+          if (returningDate) {
+            updateFields.returningDate = returningDate;
+          }
+          if (cancellingDate) {
+            updateFields.cancellingDate = cancellingDate;
+          }
+
           const updatedDocForAssetDistributionCollection = {
             $set: updateFields,
           };
